@@ -1,0 +1,1528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventory Overview • Sep 28, 2026 PT</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .custom-scrollbar::-webkit-scrollbar {
+            height: 8px;
+            width: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 4px;
+        }
+        .sku-badge {
+            transition: all 0.15s ease-in-out;
+        }
+        .sku-badge:hover {
+            transform: translateY(-1px);
+        }
+    </style>
+</head>
+<body class="bg-slate-900 text-slate-100 font-sans min-h-screen pb-16 selection:bg-emerald-500 selection:text-slate-900">
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6">
+
+        <div class="mb-4 flex flex-col sm:flex-row sm:items-center justify-between text-xs text-slate-400 px-1 gap-2">
+            <div>
+                <div id="page-title" class="text-base sm:text-lg font-bold text-white tracking-tight">Inventory Overview</div>
+                <span id="store-count-label" class="font-semibold text-slate-300">Showing 23 of 23 stores</span>
+            </div>
+            <span class="text-slate-300 font-mono bg-slate-800/80 border border-slate-700 px-2.5 py-1 rounded-md self-start sm:self-auto">
+                Live pull • Sep 28, 2026 PT
+            </span>
+        </div>
+
+        <div id="store-cards-container" class="grid grid-cols-1 gap-6">
+        </div>
+
+        <div id="matrix-table-container" class="hidden bg-slate-800 rounded-xl border border-slate-700 shadow-2xl overflow-hidden">
+            <div class="overflow-x-auto custom-scrollbar">
+                <table class="w-full text-left border-collapse text-xs">
+                    <thead>
+                        <tr class="bg-slate-900 border-b border-slate-700 text-slate-300 font-bold uppercase tracking-wider text-[10px]">
+                            <th class="p-3 sticky left-0 z-20 bg-slate-900 border-r border-slate-700 min-w-[220px] shadow-lg">Store Name (Col A)</th>
+                            <th class="p-2 text-center border-r border-slate-800 min-w-[140px] bg-emerald-950/20 text-emerald-300">1g Joint</th>
+                            <th class="p-2 text-center border-r border-slate-800 min-w-[140px] bg-emerald-950/20 text-emerald-300">1.75g Joint</th>
+                            <th class="p-2 text-center border-r border-slate-800 min-w-[160px] bg-teal-950/20 text-teal-300">1g Flav Inf Joint</th>
+                            <th class="p-2 text-center border-r border-slate-800 min-w-[160px] bg-teal-950/20 text-teal-300">1g Str Inf Joint</th>
+                            <th class="p-2 text-center border-r border-slate-800 min-w-[160px] bg-teal-950/20 text-teal-300">2g Flav Inf Joint</th>
+                            <th class="p-2 text-center border-r border-slate-800 min-w-[160px] bg-teal-950/20 text-teal-300">2g Str Inf Joint</th>
+                            <th class="p-2 text-center border-r border-slate-800 min-w-[140px] bg-cyan-950/20 text-cyan-300">1g Blunt</th>
+                            <th class="p-2 text-center border-r border-slate-800 min-w-[140px] bg-cyan-950/20 text-cyan-300">1.75g Blunt</th>
+                            <th class="p-2 text-center border-r border-slate-800 min-w-[160px] bg-cyan-950/20 text-cyan-300">2g Flav Inf Blunt</th>
+                            <th class="p-2 text-center border-r border-slate-800 min-w-[160px] bg-cyan-950/20 text-cyan-300">2g Str Inf Blunt</th>
+                            <th class="p-2 text-center border-r border-slate-800 min-w-[160px] bg-indigo-950/20 text-indigo-300">4g Legend Pack</th>
+                            <th class="p-2 text-center border-r border-slate-800 min-w-[150px] bg-indigo-950/20 text-indigo-300">2g Legend Dab</th>
+                            <th class="p-2 text-center min-w-[180px] bg-amber-950/20 text-amber-300">Buzz Bites</th>
+                        </tr>
+                    </thead>
+                    <tbody id="matrix-tbody" class="divide-y divide-slate-700/60 font-medium">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </main>
+
+    <div id="add-sku-modal" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-slate-800 border border-slate-700 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-700 pb-3">
+                <h3 class="text-base font-bold text-white" id="modal-store-title">Add SKU to Store Entry</h3>
+                <button onclick="closeSkuModal()" class="text-slate-400 hover:text-white font-bold text-sm">✕</button>
+            </div>
+            
+            <div class="space-y-3">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1">Select Product Category</label>
+                    <select id="modal-category-select" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-slate-100 focus:outline-none focus:border-emerald-500">
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1">Product SKU / Strain Name</label>
+                    <input type="text" id="modal-sku-input" placeholder="e.g. Iconic Flavored - Pineapple Express (1.04g)" 
+                        class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-slate-100 focus:outline-none focus:border-emerald-500">
+                </div>
+            </div>
+
+            <div class="flex items-center justify-end space-x-2 pt-2">
+                <button onclick="closeSkuModal()" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-slate-700 text-slate-300 hover:bg-slate-600">Cancel</button>
+                <button onclick="saveModalSku()" class="px-4 py-1.5 rounded-lg text-xs font-bold bg-emerald-600 text-white hover:bg-emerald-500">Save SKU</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const emptySkus = () => ({
+            j1g: [],
+            j175g: [],
+            j1g_fi: [],
+            j1g_si: [],
+            j2g_fi: [],
+            j2g_si: [],
+            b1g: [],
+            b175g: [],
+            b2g_fi: [],
+            b2g_si: [],
+            leg4g: [],
+            leg2g_dab: [],
+            buzz: []
+        });
+
+        const storeInventory = [
+            {
+                        "id": "store-1",
+                        "name": "Emerald Triangle - Albany",
+                        "skus": {
+                                    "j1g": [
+                                                "Iconic Preroll - Bahama Berry (1g)",
+                                                "Iconic Preroll - Blackberry Cake (1g)",
+                                                "Iconic Preroll - Cap Junky (1g)",
+                                                "Iconic Preroll - Grape Diesel (1g)",
+                                                "Iconic Preroll - Permanent Midnight (1g)"
+                                    ],
+                                    "j175g": [
+                                                "Iconic Preroll - Blue Andeze (1.75g)",
+                                                "Iconic Preroll - Cheesy Poofs (1.75g)",
+                                                "Iconic Preroll - Creme De Mintz (1.75g)",
+                                                "Iconic Preroll - MacMosa (1.75g)",
+                                                "Iconic Preroll - Pineapple Zikigai (1.75g)",
+                                                "Iconic Preroll - Purple Churro (1.75g)"
+                                    ],
+                                    "j1g_fi": [
+                                                "Iconic Flavors Infused Preroll - Fruit Punch OG (1.04g)"
+                                    ],
+                                    "j1g_si": [],
+                                    "j2g_fi": [
+                                                "Iconic Flavors Glass Tip Infused Joint - Blueberry Banana Pancake (2g)",
+                                                "Iconic Flavors Glass Tip Infused Joint - Fruit Punch OG (2g)",
+                                                "Iconic Flavors Glass Tip Infused Joint - Grape Ape (2g)",
+                                                "Iconic Flavors Glass Tip Infused Joint - Kiwi Chem Berry (2g)",
+                                                "Iconic Flavors Glass Tip Infused Joint - Peach Rings (2g)",
+                                                "Iconic Flavors Glass Tip Infused Joint - Pineapple Express (2g)",
+                                                "Iconic Flavors Glass Tip Infused Joint - Twisted Maui Wowie (2g)"
+                                    ],
+                                    "j2g_si": [
+                                                "Iconic Strains Glass Tip Infused Joint - Electric Lemonade (2g)",
+                                                "Iconic Strains Glass Tip Infused Joint - GSC (2g)",
+                                                "Iconic Strains Glass Tip Infused Joint - Wedding Cake (2g)"
+                                    ],
+                                    "b1g": [],
+                                    "b175g": [],
+                                    "b2g_fi": [],
+                                    "b2g_si": [
+                                                "Iconic Strains Glass Tip Infused Blunt - Alpine Blue (2g)",
+                                                "Iconic Strains Glass Tip Infused Blunt - PDX Diesel (2g)"
+                                    ],
+                                    "leg4g": [
+                                                "Legend 8pk Pre-Rolls - Wonder Weapon (Albany) (4g)",
+                                                "Legends Preroll 8pk - Durban Dream (6.4g)",
+                                                "Legends Preroll 8pk - Grape x Hi-Chew (6.4g)",
+                                                "Legends Preroll 8pk - Happy Jack (6.4g)",
+                                                "Legends Preroll 8pk - Prickly Situation (6.4g)"
+                                    ],
+                                    "leg2g_dab": [],
+                                    "buzz": [
+                                                "Buzz Bites Single - Citrus Orange (15g)",
+                                                "Buzz Bites Single - Grape Splash (15g)",
+                                                "Buzz Bites Single - Sour Apple 1:1 (15g)",
+                                                "Buzz Bites Single - Spicy Watermelon (15g)"
+                                    ]
+                        }
+            },
+            {
+                        "id": "store-2",
+                        "name": "Emerald Triangle - M1",
+                        "skus": {
+                                    "j1g": [
+                                                "Iconic Preroll - Blackberry Cake (1g)",
+                                                "Iconic Preroll - Cap Junky (1g)",
+                                                "Iconic Preroll - Happy (1g)"
+                                    ],
+                                    "j175g": [
+                                                "Iconic Preroll - Blue Andeze (1.75g)",
+                                                "Iconic Preroll - Creme De Mintz (1.75g)",
+                                                "Iconic Preroll - MacMosa (1.75g)"
+                                    ],
+                                    "j1g_fi": [
+                                                "Iconic Flavors Infused Preroll - Blueberry Banana Pancake (1.04g)",
+                                                "Iconic Flavors Infused Preroll - Fruit Punch OG (1.04g)",
+                                                "Iconic Flavors Infused Preroll - Grape Ape (1.04g)",
+                                                "Iconic Flavors Infused Preroll - Kiwi Chem Berry (1.04g)",
+                                                "Iconic Flavors Infused Preroll - Peach RIngs (1.04g)",
+                                                "Iconic Flavors Infused Preroll - Pineapple Express (1.04g)",
+                                                "Iconic Flavors Infused Preroll - Twisted Maui Wowie (1.04g)"
+                                    ],
+                                    "j1g_si": [
+                                                "Iconic Strains Infused Preroll - Ghost Train Haze (1.04g)",
+                                                "Iconic Strains Infused Preroll - Northern Lights (1.04g)",
+                                                "Iconic Strains Infused Preroll - White Widow (1.04g)"
+                                    ],
+                                    "j2g_fi": [
+                                                "Iconic Flavors Glass Tip Infused Joint - Fruit Punch OG (2.17g)",
+                                                "Iconic Flavors Glass Tip Infused Joint - Grape Ape (2.17g)",
+                                                "Iconic Flavors Glass Tip Infused Joint - Kiwi Chem Berry (2.17g)",
+                                                "Iconic Flavors Glass Tip Infused Joint - Peach Rings (2.17g)",
+                                                "Iconic Flavors Glass Tip Infused Joint - Pineapple Express (2.17g)",
+                                                "Iconic Flavors Glass Tip Infused Joint - Twisted Maui Wowie (2.17g)"
+                                    ],
+                                    "j2g_si": [
+                                                "Iconic Strains Glass Tip Infused Joint - Electric Lemonade (2.17g)",
+                                                "Iconic Strains Glass Tip Infused Joint - GSC (2.17g)",
+                                                "Iconic Strains Glass Tip Infused Joint - Wedding Cake (2.17g)"
+                                    ],
+                                    "b1g": [
+                                                "Iconic Classic Blunt - Happy (1g)",
+                                                "Iconic Classic Blunt - Strawberry Guava (1g)",
+                                                "Iconic Classic Blunt - Super Boof (1g)"
+                                    ],
+                                    "b175g": [
+                                                "Iconic Glass Tip Classic Blunt - Gary Payton (1.75g)",
+                                                "Iconic Glass Tip Classic Blunt - Lizard Cakes (1.75g)",
+                                                "Iconic Glass Tip Classic Blunt - Stardawg (1.75g)",
+                                                "Iconic Glass Tip Classic Blunt - Super Boof (1.75g)",
+                                                "Iconic Glass Tip Classic Blunt - Wonder Dawg (1.75g)"
+                                    ],
+                                    "b2g_fi": [
+                                                "Iconic Flavors Glass Tip Infused Blunt - Blueberry Banana Pancake (2.3g)",
+                                                "Iconic Flavors Glass Tip Infused Blunt - Grape Ape (2.3g)",
+                                                "Iconic Flavors Glass Tip Infused Blunt - Kiwi Chem Berry (2.3g)",
+                                                "Iconic Flavors Glass Tip Infused Blunt - Peach Rings (2.3g)",
+                                                "Iconic Flavors Glass Tip Infused Blunt - Pineapple Express (2.3g)",
+                                                "Iconic Flavors Glass Tip Infused Blunt - Twisted Maui Wowie (2.3g)",
+                                                "Iconic Glass Tip Infused Blunt - Fruit Punch (2.3g)",
+                                                "Iconic Glass Tip Infused Blunt - Pineapple Express (2.3g)",
+                                                "Iconic Glass Tip Infused Blunt - Twisted Maui (2.3g)"
+                                    ],
+                                    "b2g_si": [
+                                                "Iconic Strains Glass Tip Infused Blunt - Alpine Blue (2.3g)"
+                                    ],
+                                    "leg4g": [
+                                                "Legends Preroll 8pk - Strawberry Lemon Haze (6.4g)"
+                                    ],
+                                    "leg2g_dab": [
+                                                "Legends Cured Resin - Acai Gelato (2g)",
+                                                "Legends Cured Resin - Blueberry Muffins (2g)",
+                                                "Legends Cured Resin - Yum Yum (2g)"
+                                    ],
+                                    "buzz": [
+                                                "Buzz Bites - Blue Raspberry (M1) (13g)",
+                                                "Buzz Bites - Peach Mango 1:1 Sativa (M1) (13g)",
+                                                "Buzz Bites - Strawberry Watermelon (M1) (13g)",
+                                                "Buzz Bites Single - Blue Razz (15g)",
+                                                "Buzz Bites Single - Citrus Orange (15g)",
+                                                "Buzz Bites Single - Pineapple Crisp (15g)",
+                                                "Buzz Bites Single - Sour Apple 1:1 (15g)",
+                                                "Buzz Bites Single - Spicy Watermelon (15g)"
+                                    ]
+                        }
+            },
+            {
+                        "id": "store-3",
+                        "name": "Emerald Triangle - M2",
+                        "skus": {
+                                    "j1g": [
+                                                "Iconic Preroll - Bahama Berry (1g)",
+                                                "Iconic Preroll - Blackberry Cake (1g)",
+                                                "Iconic Preroll - Cap Junky (1g)",
+                                                "Iconic Preroll - Permanent Midnight (1g)"
+                                    ],
+                                    "j175g": [
+                                                "Iconic Preroll - Blue Andeze (1.75g)",
+                                                "Iconic Preroll - Cheesy Poofs (1.75g)",
+                                                "Iconic Preroll - Creme De Mintz (1.75g)",
+                                                "Iconic Preroll - MacMosa (1.75g)",
+                                                "Iconic Preroll - Pineapple Zikigai (1.75g)",
+                                                "Iconic Preroll - Purple Churro (1.75g)"
+                                    ],
+                                    "j1g_fi": [
+                                                "Iconic Flavors Infused Preroll - Fruit Punch OG (1.04g)",
+                                                "Iconic Flavors Infused Preroll - Kiwi Chem Berry (1.04g)"
+                                    ],
+                                    "j1g_si": [],
+                                    "j2g_fi": [
+                                                "Iconic Flavors Glass Tip Infused Joint - Fruit Punch OG (2.17g)",
+                                                "Iconic Flavors Glass Tip Infused Joint - Kiwi Chem Berry (2.17g)",
+                                                "Iconic Flavors Glass Tip Infused Joint - Peach Rings (2.17g)",
+                                                "Iconic Flavors Glass Tip Infused Joint - Pineapple Express (2.17g)",
+                                                "Iconic Flavors Glass Tip Infused Joint - Twisted Maui Wowie (2.17g)"
+                                    ],
+                                    "j2g_si": [
+                                                "Iconic Strains Glass Tip Infused Joint - Electric Lemonade (2.17g)",
+                                                "Iconic Strains Glass Tip Infused Joint - GSC (2.17g)",
+                                                "Iconic Strains Glass Tip Infused Joint - Wedding Cake (2.17g)"
+                                    ],
+                                    "b1g": [
+                                                "Iconic Classic Blunt - Biscotti #9 (1g)",
+                                                "Iconic Classic Blunt - Happy (1g)",
+                                                "Iconic Classic Blunt - Super Boof (1g)"
+                                    ],
+                                    "b175g": [
+                                                "Iconic Glass Tip Classic Blunt - Lizard Cakes (1.75g)",
+                                                "Iconic Glass Tip Classic Blunt - Stardawg (1.75g)",
+                                                "Iconic Glass Tip Classic Blunt - Super Boof (1.75g)",
+                                                "Iconic Glass Tip Classic Blunt - Wonder Dawg (1.75g)"
+                                    ],
+                                    "b2g_fi": [],
+                                    "b2g_si": [
+                                                "Iconic Strains Glass Tip Infused Blunt - Alpine Blue (2.3g)",
+                                                "Iconic Strains Glass Tip Infused Blunt - GG #4 (2.3g)",
+                                                "Iconic Strains Glass Tip Infused Blunt - PDX Diesel (2.3g)"
+                                    ],
+                                    "leg4g": [
+                                                "Legends Preroll 8pk - Cheetoz (6.4g)",
+                                                "Legends Preroll 8pk - Grape Ape (6.4g)",
+                                                "Legends Preroll 8pk - Pure Michigan (6.4g)",
+                                                "Legends Preroll 8pk - Purple Haze (6.4g)",
+                                                "Legends Preroll 8pk - Secret Weapon (6.4g)",
+                                                "Legends Preroll 8pk - Strawberry Lemon Haze (6.4g)"
+                                    ],
+                                    "leg2g_dab": [
+                                                "Legends Dabs - Family Matters (M2) (2g)",
+                                                "Legends Dabs - Hot Pink (M2) (2g)",
+                                                "Legends Dabs - Neon Moon (M2) (2g)"
+                                    ],
+                                    "buzz": [
+                                                "Buzz Bites 10pk 100mg - Peach Mango 1:1 Sativa (M2) (1g)",
+                                                "Buzz Bites Single Blue Razz Gummy  (M2) (N/A)",
+                                                "Buzz Bites Single Lime Twist Gummy (Balanced) (M2) (N/A)",
+                                                "Buzz Bites Single Pineapple Crisp Gummy  (M2) (N/A)"
+                                    ]
+                        }
+            },
+            {
+                        "id": "store-4",
+                        "name": "Emerald Triangle - Merlin",
+                        "skus": {
+                                    "j1g": [
+                                                "Iconic Preroll - Blackberry Cake (1g)",
+                                                "Iconic Preroll - Cap Junky (1g)",
+                                                "Iconic Preroll - Happy (1g)"
+                                    ],
+                                    "j175g": [
+                                                "Iconic Preroll - Blue Andeze (1.75g)",
+                                                "Iconic Preroll - Creme De Mintz (1.75g)",
+                                                "Iconic Preroll - MacMosa (1.75g)"
+                                    ],
+                                    "j1g_fi": [
+                                                "Iconic Flavors Infused Preroll - Blueberry Banana Pancake (1.04g)",
+                                                "Iconic Flavors Infused Preroll - Fruit Punch OG (1.04g)",
+                                                "Iconic Flavors Infused Preroll - Grape Ape (1.04g)",
+                                                "Iconic Flavors Infused Preroll - Kiwi Chem Berry (1.04g)",
+                                                "Iconic Flavors Infused Preroll - Peach RIngs (1.04g)",
+                                                "Iconic Flavors Infused Preroll - Pineapple Express (1.04g)",
+                                                "Iconic Flavors Infused Preroll - Twisted Maui Wowie (1.04g)"
+                                    ],
+                                    "j1g_si": [
+                                                "Iconic Strains Infused Preroll - Ghost Train Haze (1.04g)",
+                                                "Iconic Strains Infused Preroll - Northern Lights (1.04g)",
+                                                "Iconic Strains Infused Preroll - White Widow (1.04g)"
+                                    ],
+                                    "j2g_fi": [
+                                                "Iconic Flavors Glass Tip Infused Joint - Blueberry Banana Pancake (2.3g)",
+                                                "Iconic Flavors Glass Tip Infused Joint - Fruit Punch OG (2.3g)",
+                                                "Iconic Flavors Glass Tip Infused Joint - Grape Ape (2.3g)",
+                                                "Iconic Flavors Glass Tip Infused Joint - Kiwi Chem Berry (2.3g)",
+                                                "Iconic Flavors Glass Tip Infused Joint - Peach Rings (2.3g)",
+                                                "Iconic Flavors Glass Tip Infused Joint - Pineapple Express (2.3g)",
+                                                "Iconic Flavors Glass Tip Infused Joint - Twisted Maui Wowie (2.3g)"
+                                    ],
+                                    "j2g_si": [
+                                                "Iconic Strains Glass Tip Infused Joint - Electric Lemonade (2.17g)",
+                                                "Iconic Strains Glass Tip Infused Joint - GSC (2.17g)",
+                                                "Iconic Strains Glass Tip Infused Joint - Wedding Cake (2.17g)"
+                                    ],
+                                    "b1g": [
+                                                "Iconic Classic Blunt - Happy (1g)"
+                                    ],
+                                    "b175g": [
+                                                "Iconic Blunt - Lipz (Merlin) (1.75g)"
+                                    ],
+                                    "b2g_fi": [
+                                                "Iconic Glass Tip Infused Blunt - Fruit Punch (2.3g)",
+                                                "Iconic Glass Tip Infused Blunt - Grape Ape (2.3g)",
+                                                "Iconic Glass Tip Infused Blunt - Peach Rings (2.3g)",
+                                                "Iconic Glass Tip Infused Blunt - Twisted Maui (2.3g)"
+                                    ],
+                                    "b2g_si": [
+                                                "Iconic Strains Glass Tip Infused Blunt - Alpine Blue (2.3g)",
+                                                "Iconic Strains Glass Tip Infused Blunt - GG #4 (2.17g)",
+                                                "Iconic Strains Glass Tip Infused Blunt - PDX Diesel (2.3g)"
+                                    ],
+                                    "leg4g": [
+                                                "Legends Preroll 8pk - Happy (6.4g)"
+                                    ],
+                                    "leg2g_dab": [
+                                                "Legends Dabs Oregon DeadHead (Merlin) (2g)",
+                                                "Legends Dabs Problems (Merlin) (2g)",
+                                                "Legends Dabs Rico Champ OG (H) (Merlin) (2g)",
+                                                "Legends Dabs Super Sour Express (S) (Merlin) (2g)"
+                                    ],
+                                    "buzz": [
+                                                "Buzz Bites - Blue Raspberry CALM (Merlin) (1g)",
+                                                "Buzz Bites - Cherry Punch (Merlin) (1g)",
+                                                "Buzz Bites - Grape Splash (Merlin) (1g)",
+                                                "Buzz Bites - Lime Twist (Merlin) (1g)",
+                                                "Buzz Bites - Peach Mango ENHANCE 1:1 10pk (Merlin) (1g)",
+                                                "Buzz Bites - Pineapple Crisp 10pk  (Merlin) (1g)"
+                                    ]
+                        }
+            },
+            {
+                        "id": "store-5",
+                        "name": "Emerald Triangle - Roseburg",
+                        "skus": {
+                                    "j1g": [
+                                                "Iconic Preroll - Bahama Berry (1g)",
+                                                "Iconic Preroll - Blackberry Cake (1g)",
+                                                "Iconic Preroll - Cap Junky (1g)",
+                                                "Iconic Preroll - Grape Diesel (1g)",
+                                                "Iconic Preroll - Permanent Midnight (1g)",
+                                                "Iconic Preroll - Strawberry Lemon Haze (1g)"
+                                    ],
+                                    "j175g": [
+                                                "Iconic Preroll - Blue Andeze (1.75g)",
+                                                "Iconic Preroll - Cheesy Poofs (1.75g)",
+                                                "Iconic Preroll - Creme De Mintz (1.75g)",
+                                                "Iconic Preroll - MacMosa (1.75g)",
+                                                "Iconic Preroll - Pineapple Zikigai (1.75g)",
+                                                "Iconic Preroll - Purple Churro (1.75g)"
+                                    ],
+                                    "j1g_fi": [
+                                                "Iconic Flavors Infused Preroll - Fruit Punch OG (1.04g)",
+                                                "Iconic Flavors Infused Preroll - Pineapple Express (1.04g)",
+                                                "Iconic Flavors Infused Preroll - Twisted Maui Wowie (1.04g)"
+                                    ],
+                                    "j1g_si": [],
+                                    "j2g_fi": [
+                                                "Iconic Flavors Glass Tip Infused Joint - Blueberry Banana Pancake (2.17g)",
+                                                "Iconic Flavors Glass Tip Infused Joint - Fruit Punch OG (2.17g)",
+                                                "Iconic Flavors Glass Tip Infused Joint - Grape Ape (2.17g)",
+                                                "Iconic Flavors Glass Tip Infused Joint - Kiwi Chem Berry (2.17g)",
+                                                "Iconic Flavors Glass Tip Infused Joint - Peach Rings (2.17g)",
+                                                "Iconic Flavors Glass Tip Infused Joint - Pineapple Express (2.17g)",
+                                                "Iconic Flavors Glass Tip Infused Joint - Twisted Maui Wowie (2.17g)"
+                                    ],
+                                    "j2g_si": [
+                                                "Iconic Strains Glass Tip Infused Joint - Electric Lemonade (2.17g)"
+                                    ],
+                                    "b1g": [],
+                                    "b175g": [
+                                                "Iconic Blunt - Purple Reign (Roseburg) (1.75g)",
+                                                "Iconic Glass Tip Classic Blunt - Apples & Bananas (1.75g)",
+                                                "Iconic Glass Tip Classic Blunt - Battle Axe (1.75g)",
+                                                "Iconic Glass Tip Classic Blunt - Big Bud (1.75g)",
+                                                "Iconic Glass Tip Classic Blunt - Cherries N Berries (1.75g)",
+                                                "Iconic Glass Tip Classic Blunt - Gary Payton (1.75g)",
+                                                "Iconic Glass Tip Classic Blunt - London Fog (1.75g)",
+                                                "Iconic Glass Tip Classic Blunt - Oregon Diesel (1.75g)",
+                                                "Iconic Glass Tip Classic Blunt - Pacific Purple (1.75g)",
+                                                "Iconic Glass Tip Classic Blunt - Permanent Marker x Hi Chew (1.75g)",
+                                                "Iconic Glass Tip Classic Blunt - Starfighter (1.75g)",
+                                                "Iconic Glass Tip Classic Blunt - Sticky Purpz (1.75g)",
+                                                "Iconic Glass Tip Classic Blunt - Trop Cherry (1.75g)"
+                                    ],
+                                    "b2g_fi": [
+                                                "Iconic Glass Tip Infused Blunt - Fruit Punch (2.3g)",
+                                                "Iconic Glass Tip Infused Blunt - Kiwi Chem Berry (2.3g)",
+                                                "Iconic Glass Tip Infused Blunt - Peach Rings (2.3g)",
+                                                "Iconic Glass Tip Infused Blunt - Twisted Maui (2.3g)"
+                                    ],
+                                    "b2g_si": [
+                                                "Iconic Strains Glass Tip Infused Blunt - Alpine Blue (2.3g)",
+                                                "Iconic Strains Glass Tip Infused Blunt - GG #4 (2.3g)",
+                                                "Iconic Strains Glass Tip Infused Blunt - PDX Diesel (2.3g)"
+                                    ],
+                                    "leg4g": [
+                                                "Legends 8pk - Lipz (Roseburg) (4g)",
+                                                "Legends Preroll 8pk - Cherrylicious (6.4g)",
+                                                "Legends Preroll 8pk - Grape Ape (6.4g)",
+                                                "Legends Preroll 8pk - Guava (6.4g)",
+                                                "Legends Preroll 8pk - Platinum Power (6.4g)",
+                                                "Legends Preroll 8pk - Strawberry Lemon Haze (6.4g)"
+                                    ],
+                                    "leg2g_dab": [
+                                                "Legends - Boujee Fruit (Roseburg) (2g)",
+                                                "Legends - Carbon Runtz (Roseburg) (2g)",
+                                                "Legends - Citrus Fizz (Roseburg) (2g)",
+                                                "Legends - Hot Pink (Roseburg) (2g)",
+                                                "Legends - Melon Cake (Roseburg) (2g)",
+                                                "Legends - Sweet Anne (Roseburg) (2g)",
+                                                "Legends - Vision (Roseburg) (2g)",
+                                                "Legends Cured Resin - Blue Andeze (2g)",
+                                                "Legends Cured Resin - Galactic Animal (2g)",
+                                                "Legends Cured Resin - Gas Drop (2g)",
+                                                "Legends Cured Resin - Gush Pop (2g)",
+                                                "Legends Cured Resin - Slurricane (2g)",
+                                                "Legends Cured Resin - Tropicana Cherries (2g)"
+                                    ],
+                                    "buzz": []
+                        }
+            },
+            {
+                        "id": "store-6",
+                        "name": "Emerald Triangle - Tablerock",
+                        "skus": {
+                                    "j1g": [
+                                                "Iconic Preroll - Bahama Berry (1g)",
+                                                "Iconic Preroll - Blackberry Cake (1g)",
+                                                "Iconic Preroll - Cap Junky (1g)",
+                                                "Iconic Preroll - Grape Diesel (1g)",
+                                                "Iconic Preroll - Permanent Midnight (1g)",
+                                                "Iconic Preroll - Strawberry Lemon Haze (1g)"
+                                    ],
+                                    "j175g": [
+                                                "Iconic Preroll - Blue Andeze (1.75g)",
+                                                "Iconic Preroll - Cheesy Poofs (1.75g)",
+                                                "Iconic Preroll - Creme De Mintz (1.75g)",
+                                                "Iconic Preroll - MacMosa (1.75g)",
+                                                "Iconic Preroll - Pineapple Zikigai (1.75g)",
+                                                "Iconic Preroll - Purple Churro (1.75g)"
+                                    ],
+                                    "j1g_fi": [
+                                                "Iconic Flavors Infused Preroll - Fruit Punch OG (1.04g)",
+                                                "Iconic Flavors Infused Preroll - Grape Ape (1.04g)",
+                                                "Iconic Flavors Infused Preroll - Kiwi Chem Berry (1.04g)",
+                                                "Iconic Flavors Infused Preroll - Peach RIngs (1.04g)"
+                                    ],
+                                    "j1g_si": [],
+                                    "j2g_fi": [
+                                                "Iconic Flavors Glass Tip Infused Joint - Blueberry Banana Pancake (2.17g)",
+                                                "Iconic Flavors Glass Tip Infused Joint - Fruit Punch OG (2.17g)",
+                                                "Iconic Flavors Glass Tip Infused Joint - Grape Ape (2.17g)",
+                                                "Iconic Flavors Glass Tip Infused Joint - Kiwi Chem Berry (2.17g)",
+                                                "Iconic Flavors Glass Tip Infused Joint - Peach Rings (2.17g)",
+                                                "Iconic Flavors Glass Tip Infused Joint - Pineapple Express (2.17g)",
+                                                "Iconic Flavors Glass Tip Infused Joint - Twisted Maui Wowie (2.17g)"
+                                    ],
+                                    "j2g_si": [
+                                                "Iconic Strains Glass Tip Infused Joint - Electric Lemonade (2.17g)"
+                                    ],
+                                    "b1g": [],
+                                    "b175g": [],
+                                    "b2g_fi": [
+                                                "Iconic Glass Tip Infused Blunt - GG#4 (2.3g)",
+                                                "Iconic Glass Tip Infused Blunt - Grape Ape (2.3g)",
+                                                "Iconic Glass Tip Infused Blunt - GSC (2.3g)",
+                                                "Iconic Glass Tip Infused Blunt - PDX Diesel (2.3g)",
+                                                "Iconic Glass Tip Infused Blunt - Peach Rings (2.3g)",
+                                                "Iconic Glass Tip Infused Blunt - Wedding Cake (2.3g)",
+                                                "Iconic Infused Blunt - Peach Rings (TableRock) (2.3g)"
+                                    ],
+                                    "b2g_si": [
+                                                "Iconic Strains Glass Tip Infused Blunt - Alpine Blue (2.3g)"
+                                    ],
+                                    "leg4g": [],
+                                    "leg2g_dab": [
+                                                "Legends Dabs - Lemon Jack (TableRock) (2g)",
+                                                "Legends Dabs - Neon Moon (TableRock) (2g)"
+                                    ],
+                                    "buzz": [
+                                                "Buzz Bites - Blue Rasberry Calm (TableRock) (N/A)",
+                                                "Buzz Bites Single - Blue Razz (15g)",
+                                                "Buzz Bites Single - Citrus Orange (15g)",
+                                                "Buzz Bites Single - Melon Surge (15g)",
+                                                "Buzz Bites Single - Peach Mango (15g)",
+                                                "Buzz Bites Single - Pineapple Crisp (15g)",
+                                                "Buzz Bites Single - Sour Apple 1:1 (15g)",
+                                                "Buzz Bites Single - Spicy Watermelon (15g)"
+                                    ]
+                        }
+            },
+            {
+                        "id": "store-7",
+                        "name": "Emerald Triangle - Talent",
+                        "skus": {
+                                    "j1g": [
+                                                "Iconic Preroll - Blackberry Cake (1g)",
+                                                "Iconic Preroll - Cap Junky (1g)",
+                                                "Iconic Preroll - Happy (1g)"
+                                    ],
+                                    "j175g": [
+                                                "Iconic Preroll - Blue Andeze (1.75g)",
+                                                "Iconic Preroll - Creme De Mintz (1.75g)",
+                                                "Iconic Preroll - MacMosa (1.75g)"
+                                    ],
+                                    "j1g_fi": [
+                                                "Iconic Flavors Infused Preroll - Blueberry Banana Pancake (1.04g)",
+                                                "Iconic Flavors Infused Preroll - Fruit Punch OG (1.04g)",
+                                                "Iconic Flavors Infused Preroll - Grape Ape (1.04g)",
+                                                "Iconic Flavors Infused Preroll - Kiwi Chem Berry (1.04g)",
+                                                "Iconic Flavors Infused Preroll - Peach RIngs (1.04g)",
+                                                "Iconic Flavors Infused Preroll - Pineapple Express (1.04g)",
+                                                "Iconic Flavors Infused Preroll - Twisted Maui Wowie (1.04g)"
+                                    ],
+                                    "j1g_si": [
+                                                "Iconic Strains Infused Preroll - Ghost Train Haze (1.04g)",
+                                                "Iconic Strains Infused Preroll - Northern Lights (1.04g)",
+                                                "Iconic Strains Infused Preroll - White Widow (1.04g)"
+                                    ],
+                                    "j2g_fi": [
+                                                "Iconic Flavors Glass Tip Infused Joint - Blueberry Banana Pancake (2.17g)",
+                                                "Iconic Flavors Glass Tip Infused Joint - Fruit Punch OG (2.17g)",
+                                                "Iconic Flavors Glass Tip Infused Joint - Grape Ape (2.17g)",
+                                                "Iconic Flavors Glass Tip Infused Joint - Kiwi Chem Berry (2.17g)",
+                                                "Iconic Flavors Glass Tip Infused Joint - Peach Rings (2.17g)",
+                                                "Iconic Flavors Glass Tip Infused Joint - Pineapple Express (2.17g)",
+                                                "Iconic Flavors Glass Tip Infused Joint - Twisted Maui Wowie (2.17g)"
+                                    ],
+                                    "j2g_si": [
+                                                "Iconic Strains Glass Tip Infused Joint - Electric Lemonade (2.17g)",
+                                                "Iconic Strains Glass Tip Infused Joint - GSC (2.17g)",
+                                                "Iconic Strains Glass Tip Infused Joint - Wedding Cake (2.17g)"
+                                    ],
+                                    "b1g": [
+                                                "Iconic Classic Blunt - Happy (1g)",
+                                                "Iconic Classic Blunt - Super Boof (1g)"
+                                    ],
+                                    "b175g": [
+                                                "Iconic Glass Tip Classic Blunt - Gary Payton (1.75g)",
+                                                "Iconic Glass Tip Classic Blunt - Lizard Cakes (1.75g)",
+                                                "Iconic Glass Tip Classic Blunt - Stardawg (1.75g)",
+                                                "Iconic Glass Tip Classic Blunt - Super Boof (1.75g)",
+                                                "Iconic Glass Tip Classic Blunt - Wonder Dawg (1.75g)"
+                                    ],
+                                    "b2g_fi": [
+                                                "Iconic Flavors Glass Tip Infused Blunt - Blueberry Banana Pancake (2.3g)",
+                                                "Iconic Flavors Glass Tip Infused Blunt - Kiwi Chem Berry (2.3g)",
+                                                "Iconic Flavors Glass Tip Infused Blunt - Pineapple Express (2.3g)",
+                                                "Iconic Flavors Glass Tip Infused Blunt - Twisted Maui Wowie (2.3g)"
+                                    ],
+                                    "b2g_si": [
+                                                "Iconic Strains Glass Tip Infused Blunt - Alpine Blue (2.3g)",
+                                                "Iconic Strains Glass Tip Infused Blunt - GG #4 (2.3g)"
+                                    ],
+                                    "leg4g": [
+                                                "Legends 8pk - Apple Invader (Talent) (4g)",
+                                                "Legends 8pk - Sticky Purpz  (Talent) (4g)",
+                                                "Legends Preroll 8pk - Blueberry Yum Yum (6.4g)",
+                                                "Legends Preroll 8pk - Pacific Purple (6.4g)"
+                                    ],
+                                    "leg2g_dab": [
+                                                "Legends Cured Resin - Grape Chem (2g)",
+                                                "Legends Cured Resin - PNW Sunrise (2g)",
+                                                "Legends Cured Resin - Tropicana Sunset (2g)"
+                                    ],
+                                    "buzz": [
+                                                "Buzz Bites - Peach Mango (Talent) (N/A)",
+                                                "Buzz Bites - Sour Apple (Talent) (N/A)",
+                                                "Buzz Bites Single - Blue Razz (15g)",
+                                                "Buzz Bites Single - Citrus Orange (15g)",
+                                                "Buzz Bites Single - Melon Surge (15g)",
+                                                "Buzz Bites Single - Pineapple Crisp (15g)",
+                                                "Buzz Bites Single - Sour Apple 1:1 (15g)",
+                                                "Buzz Bites Single - Spicy Watermelon (15g)"
+                                    ]
+                        }
+            },
+            {
+                        "id": "store-8",
+                        "name": "Emerald Triangle - K1",
+                        "skus": {
+                                    "j1g": [
+                                                "Iconic Preroll - Cap Junky (1g)",
+                                                "Iconic Preroll - Happy (1g)"
+                                    ],
+                                    "j175g": [
+                                                "Iconic Preroll - Blue Andeze (1.75g)",
+                                                "Iconic Preroll - Creme De Mintz (1.75g)",
+                                                "Iconic Preroll - MacMosa (1.75g)"
+                                    ],
+                                    "j1g_fi": [
+                                                "Iconic Flavors Infused Preroll - Fruit Punch OG (1.04g)",
+                                                "Iconic Flavors Infused Preroll - Grape Ape (1.04g)",
+                                                "Iconic Flavors Infused Preroll - Kiwi Chem Berry (1.04g)",
+                                                "Iconic Flavors Infused Preroll - Pineapple Express (1.04g)"
+                                    ],
+                                    "j1g_si": [],
+                                    "j2g_fi": [
+                                                "Iconic Flavors Glass Tip Infused Joint - Blueberry Banana Pancake (2.17g)",
+                                                "Iconic Flavors Glass Tip Infused Joint - Fruit Punch OG (2.17g)",
+                                                "Iconic Flavors Glass Tip Infused Joint - Grape Ape (2.17g)",
+                                                "Iconic Flavors Glass Tip Infused Joint - Kiwi Chem Berry (2.17g)",
+                                                "Iconic Flavors Glass Tip Infused Joint - Peach Rings (2.17g)",
+                                                "Iconic Flavors Glass Tip Infused Joint - Pineapple Express (2.17g)",
+                                                "Iconic Flavors Glass Tip Infused Joint - Twisted Maui Wowie (2.17g)"
+                                    ],
+                                    "j2g_si": [
+                                                "Iconic Strains Glass Tip Infused Joint - GSC (2.17g)",
+                                                "Iconic Strains Glass Tip Infused Joint - Wedding Cake (2.17g)"
+                                    ],
+                                    "b1g": [
+                                                "Iconic Blunt -  Grape x Hi Chew (K1) (1g)",
+                                                "Iconic Blunt - Forbidden Gas (K1) (1g)",
+                                                "Iconic Blunt - Puro Blanco (K1) (1g)",
+                                                "Iconic Classic Blunt - Biscotti #9 (1g)",
+                                                "Iconic Classic Blunt - Fugu (1g)",
+                                                "Iconic Classic Blunt - Nascar Pretty (1g)",
+                                                "Iconic Classic Blunt - Neon Nerds (1g)",
+                                                "Iconic Classic Blunt - Strawberry Guava (1g)"
+                                    ],
+                                    "b175g": [
+                                                "Iconic Glass Tip Classic Blunt - Super Boof (1.75g)"
+                                    ],
+                                    "b2g_fi": [
+                                                "Iconic Glass Tip Infused Blunt - Alpine Blue (2.17g)",
+                                                "Iconic Glass Tip Infused Blunt - PDX Diesel (2.17g)"
+                                    ],
+                                    "b2g_si": [],
+                                    "leg4g": [],
+                                    "leg2g_dab": [],
+                                    "buzz": [
+                                                "Buzz Bites 100mg - 1:1 Sour Apple (K1) (13g)",
+                                                "Buzz Bites 100mg - Blue Raspberry (K1) (13g)",
+                                                "Buzz Bites Single - Citrus Orange (15g)",
+                                                "Buzz Bites Single - Grape Splash (15g)",
+                                                "Buzz Bites Single - Lime Twist (15g)",
+                                                "Buzz Bites Single - Melon Surge (15g)"
+                                    ]
+                        }
+            },
+            {
+                        "id": "store-9",
+                        "name": "High Lakes Maywood",
+                        "skus": {
+                                    "j1g": [],
+                                    "j175g": [],
+                                    "j1g_fi": [],
+                                    "j1g_si": [],
+                                    "j2g_fi": [],
+                                    "j2g_si": [],
+                                    "b1g": [],
+                                    "b175g": [
+                                                "Iconic Durban Dream Glass Tip Blunt (1.75g)",
+                                                "Iconic Lizard Cakes Glass Tip Blunt (1.75g)",
+                                                "Iconic Pure Michigan Glass Tip Blunt (1.75g)",
+                                                "Iconic Stardawg Glass Tip Blunt (1.75g)"
+                                    ],
+                                    "b2g_fi": [
+                                                "Iconic Alpine Blue Glass Tip Infused Blunt (2g)",
+                                                "Iconic Blueberry Banana Pancakes Infused Blunt (2g)",
+                                                "Iconic Fruit Punch OG Infused Blunt (2g)",
+                                                "Iconic GG#4 Glass Tip Infused Blunt (2g)",
+                                                "Iconic Grape Ape Infused Blunt (2g)",
+                                                "Iconic PDX Diesel Glass Tip Infused Blunt (2g)",
+                                                "Iconic Pineapple Express Infused Blunt (2g)",
+                                                "Iconic Twisted Maui Wowie Infused Blunt (2g)"
+                                    ],
+                                    "b2g_si": [],
+                                    "leg4g": [],
+                                    "leg2g_dab": [
+                                                "Faded Legend OG Distillate AIO (2g)",
+                                                "Legends Death Star Cured Resin Dab (2g)",
+                                                "Legends Family Jewels Cured Resin Dab (2g)",
+                                                "Legends Mint RNTZ Cured Reain Dab (2g)"
+                                    ],
+                                    "buzz": [
+                                                "Buzz Bites Citrus Orange 100mg Single Gummy (15g)",
+                                                "Buzz Bites Grape Splash 100mg Single Gummy (15g)",
+                                                "Buzz Bites Lime Twist 100mg Single Gummy (15g)",
+                                                "Buzz Bites Peach Mango Enhance 100mg Gummy (15g)",
+                                                "Buzz Bites Pineapple Crisp 100mg Single Gummy (15g)",
+                                                "Buzz Bites Sour Apple 100mg Single Gummy (15g)",
+                                                "Buzz Bites Spicy Watermelon 100mg Single Gummy (15g)"
+                                    ]
+                        }
+            },
+            {
+                        "id": "store-10",
+                        "name": "Budz Barn - Medford",
+                        "skus": {
+                                    "j1g": [],
+                                    "j175g": [],
+                                    "j1g_fi": [],
+                                    "j1g_si": [],
+                                    "j2g_fi": [],
+                                    "j2g_si": [],
+                                    "b1g": [],
+                                    "b175g": [],
+                                    "b2g_fi": [],
+                                    "b2g_si": [],
+                                    "leg4g": [],
+                                    "leg2g_dab": [],
+                                    "buzz": []
+                        }
+            },
+            {
+                        "id": "store-11",
+                        "name": "Budz Mart - Medford",
+                        "skus": {
+                                    "j1g": [],
+                                    "j175g": [],
+                                    "j1g_fi": [],
+                                    "j1g_si": [],
+                                    "j2g_fi": [],
+                                    "j2g_si": [],
+                                    "b1g": [],
+                                    "b175g": [],
+                                    "b2g_fi": [],
+                                    "b2g_si": [],
+                                    "leg4g": [],
+                                    "leg2g_dab": [],
+                                    "buzz": [
+                                                "Buzz Bites - Blue Razz Calm (g)",
+                                                "Buzz Bites - Cherry Punch (g)",
+                                                "Buzz Bites - Grape Splash",
+                                                "Buzz Bites - Lime Twist (g)",
+                                                "Buzz Bites - peach mango enhance",
+                                                "Buzz Bites - Pineapple Crisp (g)"
+                                    ]
+                        }
+            },
+            {
+                        "id": "store-12",
+                        "name": "Budz Redwood - Cave Junction",
+                        "skus": {
+                                    "j1g": [],
+                                    "j175g": [],
+                                    "j1g_fi": [],
+                                    "j1g_si": [],
+                                    "j2g_fi": [],
+                                    "j2g_si": [],
+                                    "b1g": [],
+                                    "b175g": [
+                                                "Iconic 1.75G Blunt - Grape Stomper",
+                                                "Iconic 1.75G Blunt - Lizard Cakes",
+                                                "Iconic 1.75G Blunt - Permanent Marker x Hi Chew"
+                                    ],
+                                    "b2g_fi": [
+                                                "Iconic 2g Infused Blunt - Original Glue",
+                                                "Iconic 2g Infused Blunt - PDX Diesel"
+                                    ],
+                                    "b2g_si": [],
+                                    "leg4g": [],
+                                    "leg2g_dab": [],
+                                    "buzz": [
+                                                "Buzz Bites - Peach Mango 1:1",
+                                                "Buzz Bites - Sour Apple 1:1 (g)"
+                                    ]
+                        }
+            },
+            {
+                        "id": "store-13",
+                        "name": "Budz River City - Merlin",
+                        "skus": {
+                                    "j1g": [],
+                                    "j175g": [],
+                                    "j1g_fi": [],
+                                    "j1g_si": [],
+                                    "j2g_fi": [],
+                                    "j2g_si": [],
+                                    "b1g": [],
+                                    "b175g": [],
+                                    "b2g_fi": [],
+                                    "b2g_si": [],
+                                    "leg4g": [],
+                                    "leg2g_dab": [],
+                                    "buzz": []
+                        }
+            },
+            {
+                        "id": "store-14",
+                        "name": "Budz Superstore - Merlin",
+                        "skus": {
+                                    "j1g": [
+                                                "Iconic 1g Pre Roll - Durban Dream",
+                                                "Iconic 1g Pre Roll - Grand Daddy OG"
+                                    ],
+                                    "j175g": [],
+                                    "j1g_fi": [],
+                                    "j1g_si": [],
+                                    "j2g_fi": [],
+                                    "j2g_si": [],
+                                    "b1g": [],
+                                    "b175g": [
+                                                "Iconic 1.75G Blunt - Wonder Dawg"
+                                    ],
+                                    "b2g_fi": [],
+                                    "b2g_si": [],
+                                    "leg4g": [],
+                                    "leg2g_dab": [
+                                                "Legends 2g Dab - Death Star",
+                                                "Legends 2g Dab - Mango Rntz",
+                                                "Legends 2g Dab - Trop Cookies"
+                                    ],
+                                    "buzz": []
+                        }
+            },
+            {
+                        "id": "store-15",
+                        "name": "Diamond Cannabis",
+                        "skus": {
+                                    "j1g": [],
+                                    "j175g": [],
+                                    "j1g_fi": [],
+                                    "j1g_si": [],
+                                    "j2g_fi": [],
+                                    "j2g_si": [],
+                                    "b1g": [],
+                                    "b175g": [],
+                                    "b2g_fi": [],
+                                    "b2g_si": [],
+                                    "leg4g": [],
+                                    "leg2g_dab": [],
+                                    "buzz": []
+                        }
+            },
+            {
+                        "id": "store-16",
+                        "name": "RVC Ashland",
+                        "skus": {
+                                    "j1g": [
+                                                "Iconic - Joint - Bahama Berry (1g)",
+                                                "Iconic - Joint - Blueberry Banana Pancake (1g)",
+                                                "Iconic - Joint - Ghost Train Haze (1g)",
+                                                "Iconic - Joint - Kiwi Chem Berry (1g)",
+                                                "Iconic - Joint - Northern Lights (1g)",
+                                                "Iconic - Joint - OG Kush (1g)",
+                                                "Iconic - Joint - Strawberry Lemon Haze (1g)",
+                                                "Iconic - Joint - Twisted Maui Wowie (1g)",
+                                                "Iconic - Joint - White Widow (1g)"
+                                    ],
+                                    "j175g": [
+                                                "Iconic - Joint - Bananaconda (1.75g)",
+                                                "Iconic - Joint - MacMosa (1.75g)",
+                                                "Iconic - Joint - Purple Churro (1.75g)"
+                                    ],
+                                    "j1g_fi": [],
+                                    "j1g_si": [],
+                                    "j2g_fi": [
+                                                "Iconic - Glass Tip Joint - Fruit Punch OG (2g)",
+                                                "Iconic - Glass Tip Joint - Grape Ape (2g)",
+                                                "Iconic - Glass Tip Joint - Peach Rings (2g)"
+                                    ],
+                                    "j2g_si": [],
+                                    "b1g": [
+                                                "Iconic - Blunt - Fugu (1g)",
+                                                "Iconic - Blunt - Neon Nerds (1g)",
+                                                "Iconic - Blunt - Permanet Marker x Hi Chew (1g)",
+                                                "Iconic - Blunt - Strawberry Guava (1g)"
+                                    ],
+                                    "b175g": [
+                                                "Iconic - Blunt - Presidential Rntz (1.75g)"
+                                    ],
+                                    "b2g_fi": [
+                                                "Iconic - Glass Tip Blunt - Alpine Blue (2g)",
+                                                "Iconic - Glass Tip Blunt - Blueberry Banana Pancake (2g)",
+                                                "Iconic - Glass Tip Blunt - Fruit Punch OG (2g)",
+                                                "Iconic - Glass Tip Blunt - GG#4 (2g)",
+                                                "Iconic - Glass Tip Blunt - Grape Ape (2g)",
+                                                "Iconic - Glass Tip Blunt - PDX Diesel (2g)",
+                                                "Iconic - Glass Tip Blunt - Peachy Rings (2g)",
+                                                "Iconic - Glass Tip Blunt - Pineapple Express (2g)"
+                                    ],
+                                    "b2g_si": [],
+                                    "leg4g": [
+                                                "Iconic - Legends - 8pk PR - Cheetoz (4g)",
+                                                "Iconic - Legends - 8pk PR - Trop Cherry (4g)"
+                                    ],
+                                    "leg2g_dab": [],
+                                    "buzz": [
+                                                "Buzz Bites - Single -  Melon Surge (15g)",
+                                                "Buzz Bites - Single - Blue Razz (15g)",
+                                                "Buzz Bites - Single - Citrus Orange (15g)",
+                                                "Buzz Bites - Single - Pineapple Crisp (15g)",
+                                                "Buzz Bites - Single - Sour Apple (15g)",
+                                                "Buzz Bites - Single - Spicy Watermelon (15g)"
+                                    ]
+                        }
+            },
+            {
+                        "id": "store-17",
+                        "name": "RVC Central Point",
+                        "skus": {
+                                    "j1g": [],
+                                    "j175g": [],
+                                    "j1g_fi": [],
+                                    "j1g_si": [],
+                                    "j2g_fi": [],
+                                    "j2g_si": [],
+                                    "b1g": [],
+                                    "b175g": [
+                                                "Iconic - Blunt - Stardawg (1.75g)"
+                                    ],
+                                    "b2g_fi": [
+                                                "Iconic - Glass Tip Blunt - Grape Ape (2g)"
+                                    ],
+                                    "b2g_si": [],
+                                    "leg4g": [
+                                                "Legends - 8pk - Chocolate Diesel (CP) (4g)",
+                                                "Legends - 8pk - Oreoz (CP) (4g)"
+                                    ],
+                                    "leg2g_dab": [],
+                                    "buzz": [
+                                                "Buzz Bites - Single - Blue Razz (15g)",
+                                                "Buzz Bites - Single - Citrus Orange (15g)",
+                                                "Buzz Bites - Single - Grape Splash (15g)",
+                                                "Buzz Bites - Single - Pineapple Crisp (15g)",
+                                                "Buzz Bites - Single - Spicy Watermelon (15g)",
+                                                "Buzz Bites - Sour Apple 1:1 (CP) (13g)"
+                                    ]
+                        }
+            },
+            {
+                        "id": "store-18",
+                        "name": "RVC West Main",
+                        "skus": {
+                                    "j1g": [
+                                                "Iconic - Joint - Blueberry Banana Pancake (1g)",
+                                                "Iconic - Joint - Ghost Train Haze (1g)",
+                                                "Iconic - Joint - Kiwi Chem Berry (1g)",
+                                                "Iconic - Joint - Twisted Maui Wowie (1g)",
+                                                "Iconic - Joint - White Widow (1g)"
+                                    ],
+                                    "j175g": [],
+                                    "j1g_fi": [],
+                                    "j1g_si": [],
+                                    "j2g_fi": [],
+                                    "j2g_si": [],
+                                    "b1g": [],
+                                    "b175g": [],
+                                    "b2g_fi": [],
+                                    "b2g_si": [],
+                                    "leg4g": [
+                                                "Legends - 8pk PR - Glue Sniffer (4g)",
+                                                "Legends - 8pk PR - Grape Ape (4g)"
+                                    ],
+                                    "leg2g_dab": [],
+                                    "buzz": [
+                                                "Buzz Bites - Single -  Melon Surge (15g)",
+                                                "Buzz Bites - Single - Citrus Orange (15g)",
+                                                "Buzz Bites - Single - Pineapple Crisp (15g)",
+                                                "Buzz Bites - Single - Sour Apple (15g)",
+                                                "Buzz Bites - Single - Spicy Watermelon (15g)"
+                                    ]
+                        }
+            },
+            {
+                        "id": "store-19",
+                        "name": "Klamath Falls Cannabis (Emerald)",
+                        "skus": {
+                                    "j1g": [
+                                                "Iconic Preroll - Bahama Berry (1g)",
+                                                "Iconic Preroll - Blackberry Cake (1g)",
+                                                "Iconic Preroll - Cap Junky (1g)",
+                                                "Iconic Preroll - Permanent Midnight (1g)"
+                                    ],
+                                    "j175g": [
+                                                "Iconic Preroll - Blue Andeze (1.75g)",
+                                                "Iconic Preroll - Cheesy Poofs (1.75g)",
+                                                "Iconic Preroll - Creme De Mintz (1.75g)",
+                                                "Iconic Preroll - MacMosa (1.75g)",
+                                                "Iconic Preroll - Purple Churro (1.75g)"
+                                    ],
+                                    "j1g_fi": [],
+                                    "j1g_si": [],
+                                    "j2g_fi": [
+                                                "Iconic Flavors Glass Tip Infused Joint - Blueberry Banana Pancake (2.17g)",
+                                                "Iconic Flavors Glass Tip Infused Joint - Fruit Punch OG (2.17g)",
+                                                "Iconic Flavors Glass Tip Infused Joint - Grape Ape (2.17g)",
+                                                "Iconic Flavors Glass Tip Infused Joint - Kiwi Chem Berry (2.17g)",
+                                                "Iconic Flavors Glass Tip Infused Joint - Peach Rings (2.17g)",
+                                                "Iconic Flavors Glass Tip Infused Joint - Pineapple Express (2.17g)",
+                                                "Iconic Flavors Glass Tip Infused Joint - Twisted Maui Wowie (2.17g)"
+                                    ],
+                                    "j2g_si": [
+                                                "Iconic Strains Glass Tip Infused Joint - Electric Lemonade (2.17g)",
+                                                "Iconic Strains Glass Tip Infused Joint - GSC (2.17g)"
+                                    ],
+                                    "b1g": [
+                                                "Iconic Classic Blunt - Permanent Marker x Hi-Chew (1g)"
+                                    ],
+                                    "b175g": [
+                                                "Iconic Glass Tip Classic Blunt - Maltese Tiger (1.75g)",
+                                                "Iconic Glass Tip Classic Blunt - Pacific Purple (1.75g)"
+                                    ],
+                                    "b2g_fi": [
+                                                "Iconic Glass Tip Infused Blunt - Fruit Punch (2.3g)",
+                                                "Iconic Glass Tip Infused Blunt - Grape Ape (2.3g)"
+                                    ],
+                                    "b2g_si": [
+                                                "Iconic Strains Glass Tip Infused Blunt - Alpine Blue (2.3g)",
+                                                "Iconic Strains Glass Tip Infused Blunt - GG #4 (2.3g)",
+                                                "Iconic Strains Glass Tip Infused Blunt - PDX Diesel (2.3g)"
+                                    ],
+                                    "leg4g": [
+                                                "Legends Preroll 8pk - Cheetoz (6.4g)"
+                                    ],
+                                    "leg2g_dab": [],
+                                    "buzz": [
+                                                "Buzz Bites - Blue Raspberry (13g)",
+                                                "Buzz Bites Single - Blue Razz (15g)",
+                                                "Buzz Bites Single - Citrus Orange (15g)",
+                                                "Buzz Bites Single - Grape Splash (15g)",
+                                                "Buzz Bites Single - Lime Twist (15g)",
+                                                "Buzz Bites Single - Peach Mango (15g)",
+                                                "Buzz Bites Single - Spicy Watermelon (15g)"
+                                    ]
+                        }
+            },
+            {
+                        "id": "store-20",
+                        "name": "Crater Cannabis",
+                        "skus": {
+                                    "j1g": [],
+                                    "j175g": [],
+                                    "j1g_fi": [],
+                                    "j1g_si": [],
+                                    "j2g_fi": [],
+                                    "j2g_si": [],
+                                    "b1g": [
+                                                "Indulge - Butter Kush Iconic Blunt (1g)",
+                                                "Indulge - Neon Nerds Iconic Blunt (1g)"
+                                    ],
+                                    "b175g": [
+                                                "Indulge - Zashimi Blunt (1.75g)"
+                                    ],
+                                    "b2g_fi": [],
+                                    "b2g_si": [],
+                                    "leg4g": [],
+                                    "leg2g_dab": [],
+                                    "buzz": []
+                        }
+            },
+            {
+                        "id": "store-21",
+                        "name": "Top Shelf Wellness - Medford",
+                        "skus": {
+                                    "j1g": [],
+                                    "j175g": [],
+                                    "j1g_fi": [],
+                                    "j1g_si": [],
+                                    "j2g_fi": [],
+                                    "j2g_si": [],
+                                    "b1g": [
+                                                "Iconic - Flex Panther Blunt - S (1g)",
+                                                "Iconic - Fruit Punch Blunt - S (1g)",
+                                                "Iconic - Fugu Blunt - I (1g)",
+                                                "Iconic - Happy Blunt - S (1g)",
+                                                "Iconic - Lizard Cakes Blunt - H (1g)",
+                                                "Iconic - Neon Nerds Blunt - H (1g)"
+                                    ],
+                                    "b175g": [
+                                                "Iconic - Battle Axe Glass Tip Blunt - H (1.75g)",
+                                                "Iconic - Grape Ape Glass Tip Blunt - I (1.75g)",
+                                                "Iconic - GSC Glass Tip Blunt - I (1.75g)",
+                                                "Iconic - Starfighter Glass Tip Blunt - I (1.75g)",
+                                                "Iconic - Super Boof Glass Tip Blunt - H (1.75g)",
+                                                "Iconic - Trop Cherry Glass Tip Blunt - S (1.75g)"
+                                    ],
+                                    "b2g_fi": [],
+                                    "b2g_si": [],
+                                    "leg4g": [],
+                                    "leg2g_dab": [],
+                                    "buzz": []
+                        }
+            },
+            {
+                        "id": "store-22",
+                        "name": "Top Shelf Wellness - Phoenix",
+                        "skus": {
+                                    "j1g": [],
+                                    "j175g": [],
+                                    "j1g_fi": [],
+                                    "j1g_si": [],
+                                    "j2g_fi": [],
+                                    "j2g_si": [],
+                                    "b1g": [
+                                                "Iconic - Flex Panther Blunt - S (1g)",
+                                                "Iconic - Fruit Punch Blunt - S (1g)",
+                                                "Iconic - Lemon Lime Punch Blunt - S (1g)",
+                                                "Iconic - Lizard Cakes Blunt - H (1g)",
+                                                "Iconic - Neon Nerds Blunt - H (1g)",
+                                                "Iconic - Strawberry Guava Blunt - H (1g)"
+                                    ],
+                                    "b175g": [
+                                                "Iconic - Battle Axe Glass Tip Blunt - H (1.75g)",
+                                                "Iconic - Grape Ape Glass Tip Blunt - I (1.75g)",
+                                                "Iconic - GSC Glass Tip Blunt - I (1.75g)",
+                                                "Iconic - Stardawg Glass Tip Blunt - S (1.75g)",
+                                                "Iconic - Super Boof Glass Tip Blunt - H (1.75g)",
+                                                "Iconic - Super Chronic OG Glass Tip Blunt - I (1.75g)",
+                                                "Iconic - Tamalez Blunt - H (1.75g)",
+                                                "Iconic - Trop Cherry Glass Tip Blunt - S (1.75g)"
+                                    ],
+                                    "b2g_fi": [],
+                                    "b2g_si": [],
+                                    "leg4g": [],
+                                    "leg2g_dab": [],
+                                    "buzz": []
+                        }
+            },
+            {
+                        "id": "store-23",
+                        "name": "Top Shelf Wellness - White City",
+                        "skus": {
+                                    "j1g": [],
+                                    "j175g": [],
+                                    "j1g_fi": [],
+                                    "j1g_si": [],
+                                    "j2g_fi": [],
+                                    "j2g_si": [],
+                                    "b1g": [
+                                                "Iconic - Black Dolphin Blunt - I (1g)",
+                                                "Iconic - Fruit Punch Blunt - S (1g)",
+                                                "Iconic - Neon Nerds Blunt - H (1g)",
+                                                "Iconic - Presidential Rntz Blunt - H (1g)",
+                                                "Iconic - Purple Haze Blunt - S (1g)",
+                                                "Iconic - Strawberry Guava Blunt - H (1g)",
+                                                "Iconic - Strawberry Lemon Haze Blunt - S (1g)"
+                                    ],
+                                    "b175g": [
+                                                "Iconic - Apple Sundae Glass Tip Blunt - S (1.75g)",
+                                                "Iconic - Blueberry Yum Yum Glass Tip Blunt - H (1.75g)",
+                                                "Iconic - Motor City Sunrise Glass Tip Blunt - S (1.75g)",
+                                                "Iconic - OG33 Glass Tip Blunt - H (1.75g)",
+                                                "Iconic - Starfighter Glass Tip Blunt - I (1.75g)",
+                                                "Iconic - Super Boof Glass Tip Blunt - H (1.75g)",
+                                                "Iconic - Trop Cherry Glass Tip Blunt - S (1.75g)"
+                                    ],
+                                    "b2g_fi": [],
+                                    "b2g_si": [],
+                                    "leg4g": [],
+                                    "leg2g_dab": [],
+                                    "buzz": []
+                        }
+            }
+];
+
+        const categories = [
+            { key: 'j1g', label: '1g Joint', badgeBg: 'bg-emerald-950/80 text-emerald-300 border-emerald-800' },
+            { key: 'j175g', label: '1.75g Joint', badgeBg: 'bg-emerald-950/80 text-emerald-300 border-emerald-800' },
+            { key: 'j1g_fi', label: '1g Flavor Infused Joint', badgeBg: 'bg-teal-950/80 text-teal-300 border-teal-800' },
+            { key: 'j1g_si', label: '1g Strain Infused Joint', badgeBg: 'bg-teal-950/80 text-teal-300 border-teal-800' },
+            { key: 'j2g_fi', label: '2g Flavor Infused Joint', badgeBg: 'bg-teal-950/80 text-teal-300 border-teal-800' },
+            { key: 'j2g_si', label: '2g Strain Infused Joint', badgeBg: 'bg-teal-950/80 text-teal-300 border-teal-800' },
+            { key: 'b1g', label: '1g Blunt', badgeBg: 'bg-cyan-950/80 text-cyan-300 border-cyan-800' },
+            { key: 'b175g', label: '1.75g Blunt', badgeBg: 'bg-cyan-950/80 text-cyan-300 border-cyan-800' },
+            { key: 'b2g_fi', label: '2g Flavor Infused Blunt', badgeBg: 'bg-cyan-950/80 text-cyan-300 border-cyan-800' },
+            { key: 'b2g_si', label: '2g Strain Infused Blunt', badgeBg: 'bg-cyan-950/80 text-cyan-300 border-cyan-800' },
+            { key: 'leg4g', label: '4g Legend Pack', badgeBg: 'bg-indigo-950/80 text-indigo-300 border-indigo-800' },
+            { key: 'leg2g_dab', label: '2g Legend Dab', badgeBg: 'bg-indigo-950/80 text-indigo-300 border-indigo-800' },
+            { key: 'buzz', label: 'Buzz Bites', badgeBg: 'bg-amber-950/80 text-amber-300 border-amber-800' }
+        ];
+
+        let currentView = 'cards';
+        let searchQuery = '';
+        let currentFilter = 'all';
+        let activeModalStoreId = null;
+
+        function renderData() {
+            const filteredStores = storeInventory.filter(store => {
+                const searchLower = searchQuery.toLowerCase().trim();
+                const matchesStoreName = store.name.toLowerCase().includes(searchLower);
+
+                let matchesSKU = false;
+                if (searchLower !== '') {
+                    categories.forEach(cat => {
+                        const skus = store.skus[cat.key] || [];
+                        skus.forEach(sku => {
+                            if (sku.toLowerCase().includes(searchLower)) {
+                                matchesSKU = true;
+                            }
+                        });
+                    });
+                }
+
+                const matchesSearch = searchLower === '' || matchesStoreName || matchesSKU;
+                if (!matchesSearch) return false;
+
+                if (currentFilter === 'has-buzz') return store.skus.buzz.length > 0;
+                if (currentFilter === 'missing-buzz') return store.skus.buzz.length === 0;
+                if (currentFilter === 'missing-dab') return store.skus.leg2g_dab.length === 0;
+                if (currentFilter === 'missing-leg4g') return store.skus.leg4g.length === 0;
+
+                return true;
+            });
+
+            document.getElementById('store-count-label').innerText = `Showing ${filteredStores.length} of ${storeInventory.length} stores`;
+
+            if (currentView === 'cards') {
+                renderCards(filteredStores);
+            } else {
+                renderTable(filteredStores);
+            }
+        }
+
+        function renderCards(stores) {
+            const container = document.getElementById('store-cards-container');
+            container.innerHTML = '';
+
+            if (stores.length === 0) {
+                container.innerHTML = `
+                    <div class="p-12 text-center text-slate-400 bg-slate-800/60 rounded-2xl border border-slate-700/80">
+                        <div class="text-lg font-bold text-slate-300 mb-1">No Stores Match Your Search Criteria</div>
+                        <p class="text-xs text-slate-500">Try clearing your search query or selecting "All Stores".</p>
+                    </div>
+                `;
+                return;
+            }
+
+            stores.forEach(store => {
+                const card = document.createElement('div');
+                card.className = "bg-slate-800 border border-slate-700/80 rounded-2xl p-6 shadow-xl space-y-5 hover:border-slate-600 transition";
+
+                let categoriesGridHtml = '';
+
+                categories.forEach(cat => {
+                    const skuList = store.skus[cat.key] || [];
+                    const hasItems = skuList.length > 0;
+
+                    let skuBadgesHtml = '';
+                    if (hasItems) {
+                        skuList.forEach((sku, idx) => {
+                            skuBadgesHtml += `
+                                <span class="sku-badge px-2.5 py-1 rounded-md text-[11px] font-medium border ${cat.badgeBg} inline-flex items-center space-x-1">
+                                    <span class="text-emerald-400 font-bold mr-1">✓</span>
+                                    <span>${sku}</span>
+                                    <button onclick="removeSku('${store.id}', '${cat.key}', ${idx})" class="ml-1 text-slate-400 hover:text-red-400 font-bold text-[10px]">✕</button>
+                                </span>
+                            `;
+                        });
+                    } else {
+                        skuBadgesHtml = `<span class="px-2.5 py-0.5 rounded text-[11px] font-medium bg-slate-900/40 text-slate-600 border border-slate-800/60 italic">— Blank Field —</span>`;
+                    }
+
+                    categoriesGridHtml += `
+                        <div class="p-3.5 rounded-xl bg-slate-900/60 border border-slate-700/50 space-y-2">
+                            <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+                                <span class="text-xs font-bold text-slate-200">${cat.label}</span>
+                                <span class="text-[10px] font-mono font-bold px-2 py-0.5 rounded ${hasItems ? 'bg-emerald-950 text-emerald-400 border border-emerald-800' : 'bg-slate-800 text-slate-500'}">
+                                    ${skuList.length} SKU${skuList.length === 1 ? '' : 's'}
+                                </span>
+                            </div>
+                            <div class="flex flex-wrap gap-1.5 pt-1">
+                                ${skuBadgesHtml}
+                            </div>
+                        </div>
+                    `;
+                });
+
+                card.innerHTML = `
+                    <div class="border-b border-slate-700 pb-4 flex flex-col md:flex-row md:items-center justify-between gap-3">
+                        <div class="flex-1">
+                            <input type="text" value="${store.name}" onblur="updateStoreName('${store.id}', this.value)" 
+                                class="text-xl font-black text-slate-200 italic bg-transparent border-b border-dashed border-slate-700 focus:border-emerald-500 focus:outline-none w-full py-0.5">
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <button onclick="openSkuModal('${store.id}')" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-600/20 text-emerald-300 border border-emerald-800/80 hover:bg-emerald-600/30 transition">
+                                + Add SKU
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                        ${categoriesGridHtml}
+                    </div>
+                `;
+
+                container.appendChild(card);
+            });
+        }
+
+        function renderTable(stores) {
+            const tbody = document.getElementById('matrix-tbody');
+            tbody.innerHTML = '';
+
+            if (stores.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="14" class="p-8 text-center text-slate-500 font-semibold">No stores match your search/filter criteria.</td></tr>`;
+                return;
+            }
+
+            stores.forEach(store => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-700/40 transition";
+
+                let cellsHtml = `
+                    <td class="p-3 sticky left-0 z-10 bg-slate-800 border-r border-slate-700 shadow-lg">
+                        <div class="font-bold text-slate-200 italic text-xs">${store.name}</div>
+                    </td>
+                `;
+
+                categories.forEach(cat => {
+                    const skuList = store.skus[cat.key] || [];
+                    const hasItems = skuList.length > 0;
+
+                    let listItems = '';
+                    if (hasItems) {
+                        skuList.forEach(sku => {
+                            listItems += `<div class="text-[10px] text-emerald-300 py-0.5 border-b border-slate-800/50 last:border-none">✓ ${sku}</div>`;
+                        });
+                    } else {
+                        listItems = `<div class="text-[10px] text-slate-600 italic">—</div>`;
+                    }
+
+                    cellsHtml += `
+                        <td class="p-2 text-left border-r border-slate-800/80 align-top">
+                            <div class="space-y-0.5 max-h-32 overflow-y-auto custom-scrollbar">
+                                ${listItems}
+                            </div>
+                        </td>
+                    `;
+                });
+
+                tr.innerHTML = cellsHtml;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function updateStoreName(storeId, newName) {
+            const store = storeInventory.find(s => s.id === storeId);
+            if (store && newName.trim() !== '') {
+                store.name = newName.trim();
+            }
+        }
+
+        function openSkuModal(storeId) {
+            activeModalStoreId = storeId;
+            const store = storeInventory.find(s => s.id === storeId);
+            document.getElementById('modal-store-title').innerText = `Add SKU to: ${store.name}`;
+
+            const select = document.getElementById('modal-category-select');
+            select.innerHTML = '';
+            categories.forEach(cat => {
+                const opt = document.createElement('option');
+                opt.value = cat.key;
+                opt.innerText = cat.label;
+                select.appendChild(opt);
+            });
+
+            document.getElementById('modal-sku-input').value = '';
+            document.getElementById('add-sku-modal').classList.remove('hidden');
+        }
+
+        function closeSkuModal() {
+            document.getElementById('add-sku-modal').classList.add('hidden');
+            activeModalStoreId = null;
+        }
+
+        function saveModalSku() {
+            if (!activeModalStoreId) return;
+            const store = storeInventory.find(s => s.id === activeModalStoreId);
+            const catKey = document.getElementById('modal-category-select').value;
+            const skuVal = document.getElementById('modal-sku-input').value.trim();
+
+            if (store && catKey && skuVal) {
+                store.skus[catKey].push(skuVal);
+                renderData();
+                closeSkuModal();
+            }
+        }
+
+        function removeSku(storeId, catKey, index) {
+            const store = storeInventory.find(s => s.id === storeId);
+            if (store && store.skus[catKey]) {
+                store.skus[catKey].splice(index, 1);
+                renderData();
+            }
+        }
+
+        function setView(viewType) {
+            currentView = viewType;
+            const matrixContainer = document.getElementById('matrix-table-container');
+            const cardsContainer = document.getElementById('store-cards-container');
+            const btnTable = document.getElementById('btn-view-table');
+            const btnCards = document.getElementById('btn-view-cards');
+
+            if (viewType === 'cards') {
+                cardsContainer.classList.remove('hidden');
+                matrixContainer.classList.add('hidden');
+                if (btnCards) btnCards.className = "px-3.5 py-1.5 rounded-lg text-xs font-bold transition bg-emerald-600 text-white border border-emerald-500 shadow-md";
+                if (btnTable) btnTable.className = "px-3.5 py-1.5 rounded-lg text-xs font-bold transition bg-slate-700 text-slate-300 hover:bg-slate-600 border border-slate-600";
+            } else {
+                matrixContainer.classList.remove('hidden');
+                cardsContainer.classList.add('hidden');
+                if (btnTable) btnTable.className = "px-3.5 py-1.5 rounded-lg text-xs font-bold transition bg-emerald-600 text-white border border-emerald-500 shadow-md";
+                if (btnCards) btnCards.className = "px-3.5 py-1.5 rounded-lg text-xs font-bold transition bg-slate-700 text-slate-300 hover:bg-slate-600 border border-slate-600";
+            }
+            renderData();
+        }
+
+        function setFilter(type) {
+            currentFilter = type;
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.className = "filter-btn px-2.5 py-1 rounded bg-slate-800 text-slate-300 hover:bg-slate-700 border border-slate-700";
+            });
+
+            const activeBtn = document.getElementById(`btn-filter-${type}`);
+            if (activeBtn) {
+                activeBtn.className = "filter-btn px-2.5 py-1 rounded bg-emerald-600 text-white font-semibold border border-emerald-500";
+            }
+            renderData();
+        }
+
+        function clearSearch() {
+            const si = document.getElementById('search-input');
+            const cb = document.getElementById('clear-search');
+            if (si) si.value = '';
+            if (cb) cb.classList.add('hidden');
+            searchQuery = '';
+            renderData();
+        }
+
+        const __searchInput = document.getElementById('search-input');
+        if (__searchInput) {
+            __searchInput.addEventListener('input', (e) => {
+                searchQuery = e.target.value;
+                const clearBtn = document.getElementById('clear-search');
+                if (clearBtn) {
+                    if (searchQuery.length > 0) {
+                        clearBtn.classList.remove('hidden');
+                    } else {
+                        clearBtn.classList.add('hidden');
+                    }
+                }
+                renderData();
+            });
+        }
+
+        renderData();
+    </script>
+</body>
+</html>
